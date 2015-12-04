@@ -429,6 +429,30 @@ func (self *CertificateStoreCtx) GetCurrentCert() *Certificate {
 	return cert
 }
 
+// SSL_CTX_set_client_CA_list tells the context to trust all certificate authorities
+// provided in either the ca_file or the ca_path.
+// See https://www.openssl.org/docs/manmaster/ssl/SSL_CTX_set_client_CA_list.html for
+// more.
+func (c *Ctx) SetClientCAListFromFile(ca_file string) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	var c_ca_file *C.char
+	if ca_file != "" {
+		c_ca_file = C.CString(ca_file)
+		defer C.free(unsafe.Pointer(c_ca_file))
+	}
+
+	bla := C.SSL_load_client_CA_file(c_ca_file)
+	// if *(*int)(unsafe.Pointer(bla)) == 0  {
+	if bla == nil {
+		return errorFromErrorQueue()
+	}
+
+	C.SSL_CTX_set_client_CA_list(c.ctx, bla)
+	return nil
+}
+
 // LoadVerifyLocations tells the context to trust all certificate authorities
 // provided in either the ca_file or the ca_path.
 // See http://www.openssl.org/docs/ssl/SSL_CTX_load_verify_locations.html for
