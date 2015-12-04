@@ -512,6 +512,29 @@ const (
 
 type VerifyCallback func(ok bool, store *CertificateStoreCtx) bool
 
+//export password_cb_thunk
+func password_cb_thunk(p unsafe.Pointer, size C.int, rw C.int, user_data unsafe.Pointer) C.int {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Critf("openssl: password callback panic'd: %v", err)
+			os.Exit(1)
+		}
+	}()
+	/*
+		verify_cb := (*Ctx)(p).verify_cb
+		// set up defaults just in case verify_cb is nil
+		if verify_cb != nil {
+			store := &CertificateStoreCtx{ctx: ctx}
+			if verify_cb(ok == 1, store) {
+				ok = 1
+			} else {
+				ok = 0
+			}
+		}
+	*/
+	return 0
+}
+
 //export verify_cb_thunk
 func verify_cb_thunk(p unsafe.Pointer, ok C.int, ctx *C.X509_STORE_CTX) C.int {
 	defer func() {
